@@ -50,3 +50,4 @@ helmstate --help
 
 ### Run Unit Tests
 - python -m unittest
+- docker build .
