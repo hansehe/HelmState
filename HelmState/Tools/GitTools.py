@@ -9,8 +9,9 @@ def CreateDefaultReadmeFile(repoFolder: str, filename = 'README.md', content: st
         content += 'Get more info about the helm state tool at: https://github.com/hansehe/HelmState'
 
     defaultFile = os.path.join(repoFolder, filename)
-    with open(defaultFile, 'w') as f:
-        f.write(content)
+    if not os.path.isfile(defaultFile):
+        with open(defaultFile, 'w') as f:
+            f.write(content)
 
     return defaultFile
 
@@ -76,7 +77,7 @@ def CommitState(repo: git.Repo, state: dict, repoFolder: str, resourceGroup: str
                 remote: str = 'origin', push: bool = True):
     branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
     stateFile = StateHandler.DumpState(state, repoFolder)
-    CommitFiles(repo, branch, message, [stateFile], remote=remote, push=push)
+    CommitFiles(repo, branch, message, files=[stateFile], remote=remote, push=push)
 
 
 def RevertState(repo: git.Repo, resourceGroup: str, namespace: str, helmChart: str,
