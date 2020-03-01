@@ -6,14 +6,14 @@ NAMESPACE_KEY = 'namespace'
 HELM_CHART_KEY = 'helm-chart'
 
 
-def GetStateFilePath(stateFolder: str, resourceGroup: str):
+def GetStateFilePath(stateFolder: str):
     if not os.path.isabs(stateFolder):
         stateFolder = os.path.join(os.getcwd(), stateFolder)
-    return os.path.join(stateFolder, resourceGroup, 'state.yaml')
+    return os.path.join(stateFolder, 'state.yaml')
 
 
-def LoadState(stateFolder: str, resourceGroup: str):
-    stateFile = GetStateFilePath(stateFolder, resourceGroup)
+def LoadState(stateFolder: str):
+    stateFile = GetStateFilePath(stateFolder)
     if not os.path.isfile(stateFile):
         return {}
 
@@ -23,8 +23,8 @@ def LoadState(stateFolder: str, resourceGroup: str):
     return state
 
 
-def DumpState(state: dict, stateFolder: str, resourceGroup: str):
-    stateFile = GetStateFilePath(stateFolder, resourceGroup)
+def DumpState(state: dict, stateFolder: str):
+    stateFile = GetStateFilePath(stateFolder)
 
     os.makedirs(os.path.dirname(stateFile), exist_ok=True)
     with open(stateFile, 'w') as f:

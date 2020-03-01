@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-DEFAULT_STATE_FOLDER = os.path.join(os.getcwd(), 'state')
+DEFAULT_STATE_FOLDER = os.path.join(os.getcwd())
 
 
 def ParseArguments(args = None):

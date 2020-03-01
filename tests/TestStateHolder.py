@@ -10,8 +10,8 @@ class TestStateHolder(unittest.TestCase):
     namespace = 'my-kubectl-namespace'
     helmChart = 'my-helm-chart'
 
-    def test_loadAndUpdateState(self, stateFolder = 'non-existent', resourceGroup = 'rg-domain-dev'):
-        state = StateHandler.LoadState(stateFolder, resourceGroup)
+    def test_loadAndUpdateState(self, stateFolder = 'non-existent'):
+        state = StateHandler.LoadState(stateFolder)
         random.seed()
         version = f'1.0.0-patch-{random.randint(0, 100)}'
         StateHandler.UpdateHelmVersion(state, self.namespace, self.helmChart, version)
@@ -27,9 +27,9 @@ class TestStateHolder(unittest.TestCase):
 
         states = []
         for n in range(numberOfCommits):
-            state = self.test_loadAndUpdateState(self.stateFolder, resourceGroup=resourceGroup)
+            state = self.test_loadAndUpdateState(self.stateFolder)
             GitTools.CommitState(state, self.stateFolder, resourceGroup, 'test commit')
-            currentState = StateHandler.LoadState(self.stateFolder, resourceGroup)
+            currentState = StateHandler.LoadState(self.stateFolder)
             states.append(state)
 
             self.assertTrue(StateHandler.GetHelmVersion(state, self.namespace, self.helmChart, asDict=False) ==
@@ -45,7 +45,7 @@ class TestStateHolder(unittest.TestCase):
         states = self.test_loadUpdateAndCommitState(numberOfCommits=3, resourceGroup=resourceGroup)
         GitTools.RevertState(self.stateFolder, resourceGroup, numberOfCommits=2)
         self.assertRaises(Exception, GitTools.RevertState, self.stateFolder, resourceGroup, numberOfCommits=1)
-        currentState = StateHandler.LoadState(self.stateFolder, resourceGroup)
+        currentState = StateHandler.LoadState(self.stateFolder)
 
         self.assertTrue(StateHandler.GetHelmVersion(states[0], self.namespace, self.helmChart, asDict=False) ==
                         StateHandler.GetHelmVersion(currentState, self.namespace, self.helmChart, asDict=False))
