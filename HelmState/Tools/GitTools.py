@@ -22,42 +22,48 @@ def GetCommitCount(repo: git.Repo):
     return int(count)
 
 
-def CommitState(state: dict, repoFolder: str, message: str):
+def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
+                remote: str = 'origin'):
+    if repo.index.diff(None) or repo.untracked_files:
+        if files is None:
+            repo.git.add(A=True)
+        else:
+            repo.git.add(files)
+        repo.git.commit(m=message)
+    if remote in repo.remotes:
+        repo.git.push('--set-upstream', remote, branch)
+
+
+def CheckoutBranch(repo: git.Repo, branch: str,
+                   masterBranch: str = 'master', remote: str = 'origin'):
+    if branch in repo.branches:
+        checkoutMessage = repo.git.checkout(branch)
+    else:
+        checkoutMessage = repo.git.checkout(masterBranch, b=branch)
+    if 'Your branch is behind' in checkoutMessage:
+        repo.git.pull(remote, branch)
+
+
+def CommitState(state: dict, repoFolder: str, resourceGroup: str, namespace: str, helmChart: str, message: str,
+                masterBranch: str = 'master', remote: str = 'origin'):
     StateHandler.DumpState(state, repoFolder)
-    repo = GetRepo(repoFolder, initializeIfNotExists=True)
     stateFile = StateHandler.GetStateFilePath(repoFolder)
+    branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
+    repo = GetRepo(repoFolder, initializeIfNotExists=True)
+    CheckoutBranch(repo, branch, masterBranch=masterBranch, remote=remote)
+    CommitFiles(repo, branch, message, [stateFile], remote=remote)
 
-    repo.index.add([stateFile])
-    repo.index.commit(message)
 
-
-def RevertState(repoFolder: str, resourceGroup: str, numberOfCommits=1):
-    repo = GetRepo(repoFolder)
+def RevertState(repoFolder: str, resourceGroup: str, namespace: str, helmChart: str,
+                numberOfCommits = 1, masterBranch: str = 'master', remote: str = 'origin'):
+    repo = GetRepo(repoFolder, initializeIfNotExists=False)
+    branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
+    CheckoutBranch(repo, branch, masterBranch=masterBranch, remote=remote)
     commitCount = GetCommitCount(repo)
     if commitCount <= numberOfCommits:
         raise Exception(f'Number of commits to revert ({numberOfCommits}) '
-                        f'must be lower then counted commits ({commitCount}) in module {resourceGroup}!')
+                        f'must be lower then counted commits ({commitCount}) in branch {branch}!')
 
     repo.head.reset(f'HEAD~{numberOfCommits}', index=True, working_tree=True)
-
-
-def CheckoutBranch(repo: git.Repo, branch: str):
-    if branch in repo.branches:
-        checkoutMessage = repo.git.checkout(branch)
-        if 'Your branch is behind' in checkoutMessage:
-            repo.git.pull('origin', branch)
-    else:
-        checkoutMessage = repo.git.checkout('master')
-        if 'Your branch is behind' in checkoutMessage:
-            repo.git.pull('origin', 'master')
-        repo.git.checkout('master', b=branch)
-
-
-def CommitFiles(repo: git.Repo, branch: str, message: str, pushToOrigin: bool = True):
-
-
-    if repo.index.diff(None) or repo.untracked_files:
-        repo.git.add(A=True)
-        repo.git.commit(m=message)
-    if pushToOrigin:
-        repo.git.push('--set-upstream', 'origin', branch)
+    if remote in repo.remotes:
+        repo.git.push('--set-upstream', '--force', remote, branch)
