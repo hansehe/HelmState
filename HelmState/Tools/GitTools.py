@@ -42,17 +42,19 @@ def RevertState(repoFolder: str, resourceGroup: str, numberOfCommits=1):
 
 
 def CheckoutBranch(repo: git.Repo, branch: str):
-    checkoutMessage = repo.git.checkout(branch)
-    if 'Your branch is behind' in checkoutMessage:
-        repo.git.pull('origin', branch)
+    if branch in repo.branches:
+        checkoutMessage = repo.git.checkout(branch)
+        if 'Your branch is behind' in checkoutMessage:
+            repo.git.pull('origin', branch)
+    else:
+        checkoutMessage = repo.git.checkout('master')
+        if 'Your branch is behind' in checkoutMessage:
+            repo.git.pull('origin', 'master')
+        repo.git.checkout('master', b=branch)
 
 
 def CommitFiles(repo: git.Repo, branch: str, message: str, pushToOrigin: bool = True):
-    if branch in repo.branches:
-        CheckoutBranch(repo, branch)
-    else:
-        CheckoutBranch(repo, 'master')
-        repo.git.checkout('master', b=branch)
+
 
     if repo.index.diff(None) or repo.untracked_files:
         repo.git.add(A=True)
