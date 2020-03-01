@@ -49,6 +49,7 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, pushToOrigin: bool = 
     repo.git.pull('origin', master)
 
     if repo.index.diff(None) or repo.untracked_files:
+        # Changes to add and commit
         repo.git.add(A=True)
         repo.git.commit(m=message)
         if pushToOrigin:
