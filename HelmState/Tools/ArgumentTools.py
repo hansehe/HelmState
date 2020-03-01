@@ -2,9 +2,6 @@ import argparse
 import os
 
 
-DEFAULT_STATE_FOLDER = os.path.join(os.getcwd())
-
-
 def ParseArguments(args = None):
     parser = argparse.ArgumentParser()
     __AddStateHolderArguments(parser)
@@ -26,26 +23,46 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
                         help="Set helm chart version to commit.",
                         default=None)
 
+    defaultNamespace = 'default'
     parser.add_argument("-n", "--namespace", type=str,
-                        help="Set namespace.",
-                        default='default')
+                        help=f"Set namespace. Default is '{defaultNamespace}'.",
+                        default=defaultNamespace)
 
+    defaultResourceGroup = 'default'
     parser.add_argument("-rg", "--resource-group", type=str,
-                        help="Set resource group name.",
-                        default='default')
+                        help=f"Set resource group name. Default is '{defaultResourceGroup}'.",
+                        default=defaultResourceGroup)
 
+    defaultMessage = 'Auto state update'
     parser.add_argument("-m", "--message", type=str,
-                        help="Set commit message.",
-                        default='Auto state update')
+                        help=f"Set commit message. Default is '{defaultMessage}'.",
+                        default=defaultMessage)
 
+    defaultCommits = 1
     parser.add_argument("-c", "--commits", type=int,
-                        help="Set number of commits to revert.",
-                        default=1)
+                        help=f"Set number of commits to revert. Default is '{defaultCommits}'.",
+                        default=defaultCommits)
 
+    parser.add_argument("-p", "--push",
+                        help="Push commits and reverts to origin.",
+                        action='store_true')
+
+    defaultFolder = os.getcwd()
     parser.add_argument("-f", "--folder", type=str,
-                        help="Set folder containing all states.",
-                        default=DEFAULT_STATE_FOLDER)
+                        help=f"Set repo folder containing all states. Default is '{defaultFolder}'.",
+                        default=defaultFolder)
 
+    defaultOutput = 'text'
     parser.add_argument("-o", "--output", type=str,
-                        help="Set output type (text, json or yaml).",
-                        default='text')
+                        help=f"Set output type (text, json or yaml). Default output is '{defaultOutput}'.",
+                        default=defaultOutput)
+
+    defaultMaster = 'master'
+    parser.add_argument("--master-branch", type=str,
+                        help=f"Set master branch. Default master branch is '{defaultMaster}'.",
+                        default=defaultMaster)
+
+    defaultRemote = 'origin'
+    parser.add_argument("--remote", type=str,
+                        help=f"Set git remote prefix. Default remote is '{defaultRemote}'.",
+                        default=defaultRemote)

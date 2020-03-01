@@ -6,18 +6,21 @@ from HelmState.Tools import GitTools
 
 
 class TestStateHolder(unittest.TestCase):
-    stateFolder = os.path.join('tests', 'state')
+    repoFolder = os.path.join('tests', 'state')
     namespace = 'my-kubectl-namespace'
     helmChart = 'my-helm-chart'
 
-    def test_loadAndUpdateState(self, stateFolder = 'non-existent'):
-        state = StateHandler.LoadState(stateFolder)
+    def test_loadAndUpdateState(self, repoFolder ='non-existent', resourceGroup = None):
+        if resourceGroup is None:
+            resourceGroup = f'rg-domain-dev-{random.randint(0, 1000)}'
+
+        state = StateHandler.LoadState(repoFolder)
         random.seed()
         version = f'1.0.0-patch-{random.randint(0, 100)}'
-        StateHandler.UpdateHelmVersion(state, self.namespace, self.helmChart, version)
-        self.assertTrue(StateHandler.GetHelmVersion(state, self.namespace, self.helmChart, asDict=False) == version)
-        helmChartState = StateHandler.GetHelmVersion(state, self.namespace, self.helmChart)
-        self.assertTrue(StateHandler.GetHelmVersion(helmChartState, self.namespace, self.helmChart, asDict=False) == version)
+        StateHandler.UpdateHelmVersion(state, resourceGroup, self.namespace, self.helmChart, version)
+        self.assertTrue(StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart, asDict=False) == version)
+        helmChartState = StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart)
+        self.assertTrue(StateHandler.GetHelmVersion(helmChartState, resourceGroup, self.namespace, self.helmChart, asDict=False) == version)
         return state
 
 
@@ -27,13 +30,14 @@ class TestStateHolder(unittest.TestCase):
 
         states = []
         for n in range(numberOfCommits):
-            state = self.test_loadAndUpdateState(self.stateFolder)
-            GitTools.CommitState(state, self.stateFolder, resourceGroup, 'test commit')
-            currentState = StateHandler.LoadState(self.stateFolder)
+            repo = GitTools.GetRepoAndCheckoutBranch(self.repoFolder, resourceGroup, self.namespace, self.helmChart)
+            state = self.test_loadAndUpdateState(repoFolder=self.repoFolder, resourceGroup=resourceGroup)
+            GitTools.CommitState(repo, state, self.repoFolder, resourceGroup, self.namespace, self.helmChart, 'test commit')
+            currentState = StateHandler.LoadState(self.repoFolder)
             states.append(state)
 
-            self.assertTrue(StateHandler.GetHelmVersion(state, self.namespace, self.helmChart, asDict=False) ==
-                            StateHandler.GetHelmVersion(currentState, self.namespace, self.helmChart, asDict=False))
+            self.assertTrue(StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart, asDict=False) ==
+                            StateHandler.GetHelmVersion(currentState, resourceGroup, self.namespace, self.helmChart, asDict=False))
 
         return states
 
@@ -43,12 +47,14 @@ class TestStateHolder(unittest.TestCase):
             resourceGroup = f'rg-domain-dev-{random.randint(0, 1000)}'
 
         states = self.test_loadUpdateAndCommitState(numberOfCommits=3, resourceGroup=resourceGroup)
-        GitTools.RevertState(self.stateFolder, resourceGroup, numberOfCommits=2)
-        self.assertRaises(Exception, GitTools.RevertState, self.stateFolder, resourceGroup, numberOfCommits=1)
-        currentState = StateHandler.LoadState(self.stateFolder)
+        repo = GitTools.GetRepoAndCheckoutBranch(self.repoFolder, resourceGroup, self.namespace, self.helmChart)
+        GitTools.RevertState(repo, resourceGroup, self.namespace, self.helmChart, numberOfCommits=2)
+        self.assertRaises(Exception, GitTools.RevertState, repo, resourceGroup,
+                          self.namespace, self.helmChart, numberOfCommits=2)
+        currentState = StateHandler.LoadState(self.repoFolder)
 
-        self.assertTrue(StateHandler.GetHelmVersion(states[0], self.namespace, self.helmChart, asDict=False) ==
-                        StateHandler.GetHelmVersion(currentState, self.namespace, self.helmChart, asDict=False))
+        self.assertTrue(StateHandler.GetHelmVersion(states[0], resourceGroup, self.namespace, self.helmChart, asDict=False) ==
+                        StateHandler.GetHelmVersion(currentState, resourceGroup, self.namespace, self.helmChart, asDict=False))
 
 
 if __name__ == '__main__':

@@ -4,11 +4,10 @@ import os
 import json
 import yaml
 from HelmState import Main
-from HelmState.Tools import StateHandler
 
 
 class TestMain(unittest.TestCase):
-    stateFolder = os.path.join('tests', 'state')
+    repoFolder = os.path.join('tests', 'state')
     namespace = 'my-kubectl-namespace'
     helmChart = 'my-helm-chart'
 
@@ -17,7 +16,7 @@ class TestMain(unittest.TestCase):
         random.seed()
         version = f'1.0.0-patch-{random.randint(0, 100)}'
         args = ['-hc', self.helmChart, '-v', version, '-rg', resourceGroup,
-                '-n', self.namespace, '-f', self.stateFolder,
+                '-n', self.namespace, '-f', self.repoFolder,
                 '-c', str(commits), '-o', output, '-m', 'test commit']
         return args
 
@@ -50,8 +49,8 @@ class TestMain(unittest.TestCase):
         yamlOutput = yaml.safe_load(Main.Main(args))
 
         self.assertTrue(textOutput.startswith('1.0.0-patch-'))
-        self.assertTrue(self.helmChart in jsonOutput[StateHandler.NAMESPACE_KEY][self.namespace][StateHandler.HELM_CHART_KEY])
-        self.assertTrue(self.helmChart in yamlOutput[StateHandler.NAMESPACE_KEY][self.namespace][StateHandler.HELM_CHART_KEY])
+        self.assertTrue(self.helmChart in jsonOutput[resourceGroup][self.namespace])
+        self.assertTrue(self.helmChart in yamlOutput[resourceGroup][self.namespace])
 
 
 if __name__ == '__main__':
