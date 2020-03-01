@@ -45,12 +45,14 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, pushToOrigin: bool = 
     if pushToOrigin:
         repo.git.pull('origin', 'master')
     if branch in repo.branches:
-        current = repo.git.checkout(branch)
+        checkoutMessage = repo.git.checkout(branch)
+        if 'Your branch is behind' in checkoutMessage:
+            repo.git.pull('origin', 'branch')
     else:
-        current = repo.git.checkout('master', b=branch)
+        repo.git.checkout('master', b=branch)
 
     if repo.index.diff(None) or repo.untracked_files:
         repo.git.add(A=True)
         repo.git.commit(m=message)
     if pushToOrigin:
-        repo.git.push('--set-upstream', 'origin', current)
+        repo.git.push('--set-upstream', 'origin', branch)
