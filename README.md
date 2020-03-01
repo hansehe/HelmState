@@ -28,6 +28,9 @@ my-resource-group:
 ## Usage
 The Helm State is available as a command line tool with `helmstate`.
 
+First of all, either clone or initialize a new repository to where the state will be stored.
+Then, try out some of the commands below with current working directory set to the repository folder.
+
 ### Commit new helm states and push last commit
 ```
 helmstate commit --helm-chart my-helm-chart --version 1.0.0
