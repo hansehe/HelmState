@@ -45,7 +45,10 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, pushToOrigin: bool = 
     if pushToOrigin:
         repo.git.pull('origin', 'master')
     if branch in repo.branches:
-        current = repo.git.checkout(branch)
+        try:
+            current = repo.git.checkout('origin/' + branch)
+        except:
+            current = repo.git.checkout(branch)
     else:
         current = repo.git.checkout('master', b=branch)
 
