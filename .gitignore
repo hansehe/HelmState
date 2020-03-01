@@ -19,6 +19,7 @@ state/
 pygit_logger.log
 tests/tests/
 tests/state/
+helmstate_test/
 docker-compose.build.*.yml
 docker-compose.publish.*.yml
 docker-compose.test.*.yml
