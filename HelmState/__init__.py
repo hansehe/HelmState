@@ -1,4 +1,5 @@
 from HelmState import Main
+import sys
 
 
 def main():
@@ -7,4 +8,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print(main())
+    sys.stdout.write(main())

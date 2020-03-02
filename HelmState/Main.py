@@ -1,5 +1,6 @@
 import json
 import yaml
+import sys
 from HelmState.Tools import StateHandler
 from HelmState.Tools import GitTools
 from HelmState.Tools import ArgumentTools
@@ -68,4 +69,4 @@ def HandleAction(action: str,
 
 
 if __name__ == "__main__":
-    print(Main())
+    sys.stdout.write(Main())
