@@ -20,7 +20,6 @@ def Main(args: list = None):
                              arguments.master_branch,
                              arguments.remote)
 
-    print(outputStr)
     return outputStr
 
 
@@ -55,11 +54,9 @@ def HandleAction(action: str,
         raise Exception('No matching action provided, please add -h/--help to get help.')
 
     state = StateHandler.LoadState(folder)
-    outputData = StateHandler.GetHelmVersion(state, resourceGroup, namespace, helmChart)
+    outputData = StateHandler.GetHelmChartData(state, resourceGroup, namespace, helmChart)
 
-    if output == 'text':
-        outputStr = StateHandler.GetHelmVersion(state, resourceGroup, namespace, helmChart, asDict=False)
-    elif output == 'json':
+    if output == 'json':
         outputStr = json.dumps(outputData, sort_keys=True, indent=4)
     elif output == 'yaml':
         outputStr = yaml.safe_dump(outputData)
@@ -71,4 +68,4 @@ def HandleAction(action: str,
 
 
 if __name__ == "__main__":
-    Main()
+    print(Main())

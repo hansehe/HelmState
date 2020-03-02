@@ -18,9 +18,7 @@ class TestStateHolder(unittest.TestCase):
         random.seed()
         version = f'1.0.0-patch-{random.randint(0, 100)}'
         StateHandler.UpdateHelmVersion(state, resourceGroup, self.namespace, self.helmChart, version)
-        self.assertTrue(StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart, asDict=False) == version)
-        helmChartState = StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart)
-        self.assertTrue(StateHandler.GetHelmVersion(helmChartState, resourceGroup, self.namespace, self.helmChart, asDict=False) == version)
+        self.assertTrue(StateHandler.GetHelmChartData(state, resourceGroup, self.namespace, self.helmChart)['version'] == version)
         return state
 
 
@@ -36,8 +34,8 @@ class TestStateHolder(unittest.TestCase):
             currentState = StateHandler.LoadState(self.repoFolder)
             states.append(state)
 
-            self.assertTrue(StateHandler.GetHelmVersion(state, resourceGroup, self.namespace, self.helmChart, asDict=False) ==
-                            StateHandler.GetHelmVersion(currentState, resourceGroup, self.namespace, self.helmChart, asDict=False))
+            self.assertTrue(StateHandler.GetHelmChartData(state, resourceGroup, self.namespace, self.helmChart)['version'] ==
+                            StateHandler.GetHelmChartData(currentState, resourceGroup, self.namespace, self.helmChart)['version'])
 
         return states
 
@@ -53,8 +51,8 @@ class TestStateHolder(unittest.TestCase):
                           self.namespace, self.helmChart, numberOfCommits=2)
         currentState = StateHandler.LoadState(self.repoFolder)
 
-        self.assertTrue(StateHandler.GetHelmVersion(states[0], resourceGroup, self.namespace, self.helmChart, asDict=False) ==
-                        StateHandler.GetHelmVersion(currentState, resourceGroup, self.namespace, self.helmChart, asDict=False))
+        self.assertTrue(StateHandler.GetHelmChartData(states[0], resourceGroup, self.namespace, self.helmChart)['version'] ==
+                        StateHandler.GetHelmChartData(currentState, resourceGroup, self.namespace, self.helmChart)['version'])
 
 
 if __name__ == '__main__':

@@ -52,9 +52,9 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
                         help=f"Set repo folder containing all states. Default is '{defaultFolder}'.",
                         default=defaultFolder)
 
-    defaultOutput = 'text'
+    defaultOutput = 'json'
     parser.add_argument("-o", "--output", type=str,
-                        help=f"Set output type (text, json or yaml). Default output is '{defaultOutput}'.",
+                        help=f"Set output type (json or yaml). Default output is '{defaultOutput}'.",
                         default=defaultOutput)
 
     defaultMaster = 'master'

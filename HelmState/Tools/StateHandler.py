@@ -44,13 +44,17 @@ def DumpState(state: dict, repoFolder: str):
     return stateFile
 
 
-def GetHelmVersion(state: dict, resourceGroup: str, namespace: str, helmChart: str, asDict = True):
+def StructureHelmChartData(version: str):
+    return {
+        'version': version
+    }
+
+
+def GetHelmChartData(state: dict, resourceGroup: str, namespace: str, helmChart: str):
     AssertStateDictIsValid(state, resourceGroup, namespace, helmChart)
 
-    version = state[resourceGroup][namespace][helmChart]
-    if asDict:
-        return {resourceGroup: {namespace: {helmChart: version}}}
-    return version
+    helmChartData = state[resourceGroup][namespace][helmChart]
+    return helmChartData
 
 
 def UpdateHelmVersion(state: dict, resourceGroup: str, namespace: str, helmChart: str, version: str):
@@ -61,7 +65,7 @@ def UpdateHelmVersion(state: dict, resourceGroup: str, namespace: str, helmChart
     if helmChart not in state[resourceGroup][namespace]:
         state[resourceGroup][namespace][helmChart] = {}
 
-    state[resourceGroup][namespace][helmChart] = version
+    state[resourceGroup][namespace][helmChart] = StructureHelmChartData(version)
 
 
 

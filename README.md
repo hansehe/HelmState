@@ -15,7 +15,8 @@ Content structure of `state.yaml`:
 ```yaml
 my-resource-group:
   my-namespace:
-    my-helm-chart: 1.0.0
+    my-helm-chart: 
+      version: 1.0.0
 ```
 
 
