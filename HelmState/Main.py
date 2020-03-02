@@ -18,6 +18,7 @@ def Main(args: list = None):
                              arguments.push,
                              arguments.folder,
                              arguments.output,
+                             arguments.dumps,
                              arguments.master_branch,
                              arguments.remote)
 
@@ -34,6 +35,7 @@ def HandleAction(action: str,
                  push: bool = False,
                  folder: str = './',
                  output: str = 'json',
+                 dumps: str = None,
                  masterBranch: str = 'master',
                  remote: str = 'remote'):
 
@@ -63,6 +65,10 @@ def HandleAction(action: str,
         outputStr = yaml.safe_dump(outputData)
     else:
         raise Exception(f'Invalid output type specified: {output}, please add -h/--help to get help.')
+
+    if dumps is not None:
+        with open(dumps, 'w') as f:
+            f.write(outputStr)
 
     return outputStr
 

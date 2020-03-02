@@ -21,7 +21,8 @@ class TestMain(unittest.TestCase):
     def GetDefaultArguments(self, resourceGroup: str, version: str = '1.0.0', commits: int = 2, output = 'json'):
         args = ['-hc', self.helmChart, '-v', version, '-rg', resourceGroup,
                 '-n', self.namespace, '-f', self.repoFolder,
-                '-c', str(commits), '-o', output, '-m', 'test commit']
+                '-c', str(commits), '-o', output, '-m', 'test commit',
+                '--dumps', os.path.join(self.repoFolder, 'output.yaml')]
         return args
 
 

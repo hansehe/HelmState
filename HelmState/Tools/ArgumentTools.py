@@ -57,6 +57,10 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
                         help=f"Set output type (json or yaml). Default output is '{defaultOutput}'.",
                         default=defaultOutput)
 
+    parser.add_argument("-d", "--dumps", type=str,
+                        help=f"Dump output to a given file.",
+                        default=None)
+
     defaultMaster = 'master'
     parser.add_argument("--master-branch", type=str,
                         help=f"Set master branch. Default master branch is '{defaultMaster}'.",
