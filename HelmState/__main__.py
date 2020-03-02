@@ -9,4 +9,4 @@ def main():
 
 if __name__ == "__main__":
     sys.stdout.write(main())
-    exit(0)
+    sys.exit(0)
