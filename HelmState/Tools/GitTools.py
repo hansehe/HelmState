@@ -55,14 +55,30 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
         repo.git.push('--set-upstream', remote, branch)
 
 
+def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBranchFromOrigin = False):
+    if remote in repo.remotes:
+        remoteBranches = repo.remotes[remote].pull()
+        remoteBranch = f'{remote}/{branch}'
+        if remoteBranch in remoteBranches:
+            if checkoutBranchFromOrigin:
+                repo.git.checkout(remoteBranch, b=branch)
+            else:
+                repo.git.pull(remote, branch)
+            return True
+    return False
+
+
 def CheckoutBranch(repo: git.Repo, branch: str,
                    masterBranch: str = 'master', remote: str = 'origin'):
     if branch in repo.branches:
-        checkoutMessage = repo.git.checkout(branch)
+        repo.git.checkout(branch)
+        PullBranch(repo, branch, remote=remote)
     else:
-        checkoutMessage = repo.git.checkout(masterBranch, b=branch)
-    if 'Your branch is behind' in checkoutMessage:
-        repo.git.pull(remote, branch)
+        remoteExists = PullBranch(repo, branch, remote=remote, checkoutBranchFromOrigin=True)
+        if not remoteExists:
+            repo.git.checkout(masterBranch)
+            PullBranch(repo, masterBranch, remote=remote)
+            repo.git.checkout(masterBranch, b=branch)
 
 
 def GetRepoAndCheckoutBranch(repoFolder: str, resourceGroup: str, namespace: str, helmChart: str, initializeIfNotExists = True,
