@@ -43,16 +43,46 @@ def GetCommitCount(repo: git.Repo):
         return 0
 
 
+def NormalizeFile(repo: git.Repo, file: str):
+    normalizedFile = os.path.normpath(file)
+    if not os.path.isabs(normalizedFile):
+        normalizedFile = os.path.join(os.path.normpath(repo.working_dir), normalizedFile)
+    return normalizedFile
+
+
+def NormalizeFiles(repo: git.Repo, files: []):
+    normalizedFiles = []
+    for file in files:
+        normalizedFile = NormalizeFile(repo, file)
+        normalizedFiles.append(normalizedFile)
+    return normalizedFiles
+
+
+def CheckForUntrackedChanges(repo: git.Repo, files: list = None):
+    if files is None:
+        return repo.index.diff(None) or repo.untracked_files
+
+    aFileIsUntracked = False
+    normalizedFiles = NormalizeFiles(repo, files)
+    normalizedUntrackedFiles = NormalizeFiles(repo, repo.untracked_files)
+    for normalizedFile in normalizedFiles:
+        if normalizedFile in normalizedUntrackedFiles:
+            aFileIsUntracked = True
+            break
+
+    return repo.index.diff(None, paths=normalizedFiles) or aFileIsUntracked
+
+
 def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
                 remote: str = 'origin', push: bool = True):
-    if repo.index.diff(None) or repo.untracked_files:
+    if CheckForUntrackedChanges(repo, files):
         if files is None:
             repo.git.add(A=True)
         else:
             repo.git.add(files)
         repo.git.commit(m=message)
-    if remote in repo.remotes and push:
-        repo.git.push('--set-upstream', remote, branch)
+        if remote in repo.remotes and push:
+            repo.git.push('--set-upstream', remote, branch)
 
 
 def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBranchFromOrigin = False):
