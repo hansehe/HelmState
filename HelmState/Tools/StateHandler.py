@@ -16,7 +16,10 @@ def CheckStateDictIsValid(state: dict, resourceGroup: str, namespace: str, helmC
 
 def AssertStateDictIsValid(state: dict, resourceGroup: str, namespace: str, helmChart: str):
     if not(CheckStateDictIsValid(state, resourceGroup, namespace, helmChart)):
-        raise Exception(f'Helm chart {helmChart} in namespace {namespace} is not registered in state.')
+        raise Exception(f"Helm chart '{helmChart}' "
+                        f"in namespace '{namespace}' "
+                        f"and resource group '{resourceGroup}' "
+                        f"is not registered in state.")
 
 
 def GetStateBranchname(resourceGroup: str, namespace: str, helmChart: str):
