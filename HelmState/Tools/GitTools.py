@@ -90,10 +90,12 @@ def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBran
         remoteBranches = repo.remotes[remote].pull()
         remoteBranch = f'{remote}/{branch}'
         if remoteBranch in remoteBranches:
+            repo.index.reset(head=True)
             if checkoutBranchFromOrigin:
                 repo.git.checkout(remoteBranch, b=branch)
             else:
                 repo.git.pull(remote, branch)
+                repo.index.reset(head=True)
             return True
     return False
 
