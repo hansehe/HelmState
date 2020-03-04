@@ -9,7 +9,7 @@ The Helm State tool stores deployed helm versions in [git](https://git-scm.com/)
 where it will be easy to track previously deployed versions and which version is currently running.
 
 The full helm version state is stored in a `state.yaml` file versioned by a git branch with this naming convention:
-- `my-resource_group/my-namespace/my-helm-chart`:
+- `my-resource_group/my-namespace/my-helm-chart`
 
 Content structure of `state.yaml`:
 ```yaml
