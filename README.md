@@ -77,6 +77,7 @@ helmstate --help
 ### Publish New Version.
 1. Configure [setup.py](./setup.py) with new version.
 2. Package: `python setup.py bdist_wheel`
+2. Check: `twine check dist/*`
 3. Publish: `twine upload dist/*`
 
 ### Run Unit Tests
