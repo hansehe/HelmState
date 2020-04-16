@@ -71,7 +71,7 @@ helmstate --help
 [gitkraken](https://www.gitkraken.com/) is a greate git GUI, and also works well to visualize the state tree, as shown below.
 
 <!-- ![alt text](./pictures/helm_state_example_gitkraken.png "HelmState visualized with gitkraken") -->
-![alt text](https://github.com/hansehe/HelmState/raw/master/pictures/helm_state_example_gitkraken.png "HelmState visualized with gitkraken")
+![alt text](https://raw.githubusercontent.com/hansehe/HelmState/master/pictures/helm_state_example_gitkraken.PNG "HelmState visualized with gitkraken")
 
 ## Development
 
