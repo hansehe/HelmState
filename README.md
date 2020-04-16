@@ -68,7 +68,7 @@ helmstate --help
 ```
 
 ### Visualize State Tree With GitKraken
-[gitkraken](https://www.gitkraken.com/) is a greate git GUI, and also works well to visualize the state tree, as shown below.
+[gitkraken](https://www.gitkraken.com/) is a great git GUI, and works well to visualize the state tree.
 
 <!-- ![alt text](./pictures/helm_state_example_gitkraken.png "HelmState visualized with gitkraken") -->
 ![alt text](https://raw.githubusercontent.com/hansehe/HelmState/master/pictures/helm_state_example_gitkraken.PNG "HelmState visualized with gitkraken")
