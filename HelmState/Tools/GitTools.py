@@ -83,8 +83,8 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
         else:
             repo.git.add(files)
         repo.git.commit(m=message)
-        if remote in repo.remotes and push:
-            repo.git.push('--set-upstream', remote, branch)
+    if remote in repo.remotes and push:
+        repo.git.push('--set-upstream', remote, branch)
 
 
 def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBranchFromOrigin = False):
