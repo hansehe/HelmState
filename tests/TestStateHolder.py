@@ -10,7 +10,7 @@ class TestStateHolder(unittest.TestCase):
     namespace = 'my-kubectl-namespace'
     helmChart = 'my-helm-chart'
 
-    def test_loadAndUpdateState(self, repoFolder ='non-existent', resourceGroup = None):
+    def test_loadAndUpdateState(self, repoFolder: str = 'non-existent', resourceGroup: str = None):
         if resourceGroup is None:
             resourceGroup = f'rg-domain-dev-{random.randint(0, 1000)}'
 
@@ -21,14 +21,14 @@ class TestStateHolder(unittest.TestCase):
         self.assertTrue(StateHandler.GetHelmChartData(state, resourceGroup, self.namespace, self.helmChart)['version'] == version)
         return state
 
-
-    def test_loadUpdateAndCommitState(self, numberOfCommits = 2, resourceGroup = None):
+    def test_loadUpdateAndCommitState(self, numberOfCommits: int = 2, resourceGroup = None):
         if resourceGroup is None:
             resourceGroup = f'rg-domain-dev-{random.randint(0, 1000)}'
 
         states = []
+        repo = GitTools.GetRepo(self.repoFolder)
         for n in range(numberOfCommits):
-            repo = GitTools.GetRepoAndCheckoutBranch(self.repoFolder, resourceGroup, self.namespace, self.helmChart)
+            GitTools.CheckoutHelmChartBranch(repo, resourceGroup, self.namespace, self.helmChart)
             state = self.test_loadAndUpdateState(repoFolder=self.repoFolder, resourceGroup=resourceGroup)
             GitTools.CommitState(repo, state, self.repoFolder, resourceGroup, self.namespace, self.helmChart, 'test commit')
             currentState = StateHandler.LoadState(self.repoFolder)
@@ -39,13 +39,13 @@ class TestStateHolder(unittest.TestCase):
 
         return states
 
-
-    def test_loadUpdateCommitAndRevertState(self, resourceGroup = None):
+    def test_loadUpdateCommitAndRevertState(self, resourceGroup: str = None):
         if resourceGroup is None:
             resourceGroup = f'rg-domain-dev-{random.randint(0, 1000)}'
 
+        repo = GitTools.GetRepo(self.repoFolder)
         states = self.test_loadUpdateAndCommitState(numberOfCommits=3, resourceGroup=resourceGroup)
-        repo = GitTools.GetRepoAndCheckoutBranch(self.repoFolder, resourceGroup, self.namespace, self.helmChart)
+        GitTools.CheckoutHelmChartBranch(repo, resourceGroup, self.namespace, self.helmChart)
         GitTools.RevertState(repo, resourceGroup, self.namespace, self.helmChart, numberOfCommits=2)
         self.assertRaises(Exception, GitTools.RevertState, repo, resourceGroup,
                           self.namespace, self.helmChart, numberOfCommits=2)

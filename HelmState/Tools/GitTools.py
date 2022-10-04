@@ -1,3 +1,5 @@
+from typing import List
+
 import git
 import os
 from HelmState.Tools import StateHandler
@@ -87,7 +89,7 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
 
 def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBranchFromOrigin = False):
     if remote in repo.remotes:
-        remoteBranches = repo.remotes[remote].pull()
+        remoteBranches = repo.remotes[remote].fetch()
         remoteBranch = f'{remote}/{branch}'
         if remoteBranch in remoteBranches:
             repo.index.reset(head=True)
@@ -113,12 +115,31 @@ def CheckoutBranch(repo: git.Repo, branch: str,
             repo.git.checkout(masterBranch, b=branch)
 
 
-def GetRepoAndCheckoutBranch(repoFolder: str, resourceGroup: str, namespace: str, helmChart: str, initializeIfNotExists = True,
-                             masterBranch: str = 'master', remote: str = 'origin', push: bool = True):
-    repo = GetRepo(repoFolder, initializeIfNotExists=initializeIfNotExists, masterBranch=masterBranch, remote=remote, push=push)
+def CheckoutMasterBranch(repo: git.Repo,
+                         masterBranch: str = 'master', remote: str = 'origin'):
+    CheckoutBranch(repo, masterBranch, masterBranch=masterBranch, remote=remote)
+
+
+def CheckoutHelmChartBranch(repo: git.Repo, resourceGroup: str, namespace: str, helmChart: str,
+                            masterBranch: str = 'master', remote: str = 'origin'):
     branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
     CheckoutBranch(repo, branch, masterBranch=masterBranch, remote=remote)
-    return repo
+
+
+def GetHelmChartBranches(repo: git.Repo, resourceGroup: str, namespace: str,
+                         remote: str = 'origin'):
+    helmCharts: List[str] = []
+    repoBranches = list(map(lambda repoBranch: str(repoBranch), repo.branches))
+    if remote in repo.remotes:
+        remoteBranches = repo.remotes[remote].fetch()
+        for remoteBranch in remoteBranches:
+            localBranch = str(remoteBranch).replace(f'{remote}/', '', 1)
+            if localBranch not in repoBranches:
+                repoBranches.append(localBranch)
+    for branch in repoBranches:
+        if branch.startswith(f'{resourceGroup}/{namespace}/'):
+            helmCharts.append(str(branch).split('/')[2])
+    return helmCharts
 
 
 def CommitState(repo: git.Repo, state: dict, repoFolder: str, resourceGroup: str, namespace: str, helmChart: str, message: str,

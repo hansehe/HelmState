@@ -69,9 +69,3 @@ def UpdateHelmVersion(state: dict, resourceGroup: str, namespace: str, helmChart
         state[resourceGroup][namespace][helmChart] = {}
 
     state[resourceGroup][namespace][helmChart] = StructureHelmChartData(version)
-
-
-
-
-
-

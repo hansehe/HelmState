@@ -1,9 +1,12 @@
 import json
+from typing import Union, List
+
 import yaml
 import sys
 from HelmState.Tools import StateHandler
 from HelmState.Tools import GitTools
 from HelmState.Tools import ArgumentTools
+from HelmState.Tools import DumpTools
 
 
 def Main(args: list = None):
@@ -26,7 +29,7 @@ def Main(args: list = None):
 
 
 def HandleAction(action: str,
-                 helmChart: str,
+                 helmChart: Union[str, List[str]],
                  version: str = None,
                  namespace: str = 'default',
                  resourceGroup: str = 'default',
@@ -38,31 +41,44 @@ def HandleAction(action: str,
                  dumps: str = None,
                  masterBranch: str = 'master',
                  remote: str = 'remote'):
+    repoHelmCharts = helmChart if isinstance(helmChart, list) else [helmChart]
+    outputData = {}
+    repo = GitTools.GetRepo(folder, initializeIfNotExists=True, push=push)
+    if len(repoHelmCharts) == 0:
+        repoHelmCharts = GitTools.GetHelmChartBranches(repo, resourceGroup, namespace, remote=remote)
+    for repoHelmChart in repoHelmCharts:
+        GitTools.CheckoutHelmChartBranch(repo, resourceGroup, namespace, repoHelmChart,
+                                         masterBranch=masterBranch, remote=remote)
+        if action == 'get':
+            pass
+        elif action == 'commit':
+            if version is None:
+                raise Exception('Please provide a version tag following the helm chart name. '
+                                'Add -h/--help for more info.')
+            state = StateHandler.LoadState(folder)
+            StateHandler.UpdateHelmVersion(state, resourceGroup, namespace, repoHelmChart, version)
+            GitTools.CommitState(repo, state, folder, resourceGroup, namespace, repoHelmChart, message,
+                                 remote=remote, push=push)
+        elif action == 'revert':
+            GitTools.RevertState(repo, resourceGroup, namespace, repoHelmChart, commits, remote=remote, push=push)
+        else:
+            raise Exception('No matching action provided, please add -h/--help to get help.')
 
-    repo = GitTools.GetRepoAndCheckoutBranch(folder, resourceGroup, namespace, helmChart, initializeIfNotExists=True,
-                                             masterBranch=masterBranch, remote=remote, push=push)
-    if action == 'get':
-        pass
-    elif action == 'commit':
-        if version is None:
-            raise Exception('Please provide a version tag following the helm chart name. '
-                            'Add -h/--help for more info.')
         state = StateHandler.LoadState(folder)
-        StateHandler.UpdateHelmVersion(state, resourceGroup, namespace, helmChart, version)
-        GitTools.CommitState(repo, state, folder, resourceGroup, namespace, helmChart, message,
-                             remote=remote, push=push)
-    elif action == 'revert':
-        GitTools.RevertState(repo, resourceGroup, namespace, helmChart, commits, remote=remote, push=push)
-    else:
-        raise Exception('No matching action provided, please add -h/--help to get help.')
+        helmChartData = StateHandler.GetHelmChartData(state, resourceGroup, namespace, repoHelmChart)
+        if len(repoHelmCharts) > 1:
+            outputData = DumpTools.MergeDictData(outputData, {repoHelmChart: helmChartData})
+        else:
+            outputData = helmChartData
 
-    state = StateHandler.LoadState(folder)
-    outputData = StateHandler.GetHelmChartData(state, resourceGroup, namespace, helmChart)
+    GitTools.CheckoutMasterBranch(repo, masterBranch=masterBranch, remote=remote)
 
     if output == 'json':
         outputStr = json.dumps(outputData, sort_keys=True, indent=4)
     elif output == 'yaml':
         outputStr = yaml.safe_dump(outputData)
+    elif output == 'env':
+        outputStr = DumpTools.DumpToEnv(outputData)
     else:
         raise Exception(f'Invalid output type specified: {output}, please add -h/--help to get help.')
 
@@ -71,7 +87,6 @@ def HandleAction(action: str,
             f.write(outputStr)
 
     return outputStr
-
 
 
 if __name__ == "__main__":

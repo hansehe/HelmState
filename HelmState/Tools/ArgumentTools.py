@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-def ParseArguments(args = None):
+def ParseArguments(args=None):
     parser = argparse.ArgumentParser()
     __AddStateHolderArguments(parser)
     arguments = parser.parse_args(args)
@@ -16,8 +16,9 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
                              + "commit new state with 'commit', \r\n"
                              + "revert state with 'revert'.")
 
-    parser.add_argument("-hc", "--helm-chart", type=str,
-                        help="Set helm chart name.")
+    parser.add_argument("-hc", "--helm-chart", type=str, nargs='+',
+                        help="Set helm chart(s) name.",
+                        default=[])
 
     parser.add_argument("-v", "--version", type=str,
                         help="Set helm chart version to commit.",
@@ -54,7 +55,7 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
 
     defaultOutput = 'json'
     parser.add_argument("-o", "--output", type=str,
-                        help=f"Set output type (json or yaml). Default output is '{defaultOutput}'.",
+                        help=f"Set output type (json, yaml or env). Default output is '{defaultOutput}'.",
                         default=defaultOutput)
 
     parser.add_argument("-d", "--dumps", type=str,
