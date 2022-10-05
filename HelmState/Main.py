@@ -23,7 +23,8 @@ def Main(args: list = None):
                              arguments.output,
                              arguments.dumps,
                              arguments.master_branch,
-                             arguments.remote)
+                             arguments.remote,
+                             arguments.offline)
 
     return outputStr
 
@@ -40,15 +41,16 @@ def HandleAction(action: str,
                  output: str = 'json',
                  dumps: str = None,
                  masterBranch: str = 'master',
-                 remote: str = 'remote'):
+                 remote: str = 'remote',
+                 offline: bool = False):
     repoHelmCharts = helmChart if isinstance(helmChart, list) else [helmChart]
     outputData = {}
     repo = GitTools.GetRepo(folder, initializeIfNotExists=True, push=push)
     if len(repoHelmCharts) == 0:
-        repoHelmCharts = GitTools.GetHelmChartBranches(repo, resourceGroup, namespace, remote=remote)
+        repoHelmCharts = GitTools.GetHelmChartBranches(repo, resourceGroup, namespace, remote=remote, offline=offline)
     for repoHelmChart in repoHelmCharts:
         GitTools.CheckoutHelmChartBranch(repo, resourceGroup, namespace, repoHelmChart,
-                                         masterBranch=masterBranch, remote=remote)
+                                         masterBranch=masterBranch, remote=remote, offline=offline)
         if action == 'get':
             pass
         elif action == 'commit':
@@ -71,7 +73,7 @@ def HandleAction(action: str,
         else:
             outputData = helmChartData
 
-    GitTools.CheckoutMasterBranch(repo, masterBranch=masterBranch, remote=remote)
+    GitTools.CheckoutMasterBranch(repo, masterBranch=masterBranch, remote=remote, offline=offline)
 
     if output == 'json':
         outputStr = json.dumps(outputData, sort_keys=True, indent=4)

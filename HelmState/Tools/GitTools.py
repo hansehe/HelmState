@@ -87,7 +87,9 @@ def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
         repo.git.push('--set-upstream', remote, branch)
 
 
-def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBranchFromOrigin = False):
+def PullBranch(repo: git.Repo, branch: str, 
+               remote: str = 'origin', 
+               checkoutBranchFromOrigin = False):
     if remote in repo.remotes:
         remoteBranches = repo.remotes[remote].fetch()
         remoteBranch = f'{remote}/{branch}'
@@ -103,34 +105,43 @@ def PullBranch(repo: git.Repo, branch: str, remote: str = 'origin', checkoutBran
 
 
 def CheckoutBranch(repo: git.Repo, branch: str,
-                   masterBranch: str = 'master', remote: str = 'origin'):
+                   masterBranch: str = 'master', 
+                   remote: str = 'origin', 
+                   offline: bool = False):
     if branch in repo.branches:
         repo.git.checkout(branch)
-        PullBranch(repo, branch, remote=remote)
+        if not offline:
+            PullBranch(repo, branch, remote=remote)
     else:
-        remoteExists = PullBranch(repo, branch, remote=remote, checkoutBranchFromOrigin=True)
+        remoteExists = PullBranch(repo, branch, remote=remote, checkoutBranchFromOrigin=True) if not offline else False
         if not remoteExists:
             repo.git.checkout(masterBranch)
-            PullBranch(repo, masterBranch, remote=remote)
+            if not offline:
+                PullBranch(repo, masterBranch, remote=remote)
             repo.git.checkout(masterBranch, b=branch)
 
 
 def CheckoutMasterBranch(repo: git.Repo,
-                         masterBranch: str = 'master', remote: str = 'origin'):
-    CheckoutBranch(repo, masterBranch, masterBranch=masterBranch, remote=remote)
+                         masterBranch: str = 'master', 
+                         remote: str = 'origin', 
+                         offline: bool = False):
+    CheckoutBranch(repo, masterBranch, masterBranch=masterBranch, remote=remote, offline=offline)
 
 
 def CheckoutHelmChartBranch(repo: git.Repo, resourceGroup: str, namespace: str, helmChart: str,
-                            masterBranch: str = 'master', remote: str = 'origin'):
+                            masterBranch: str = 'master', 
+                            remote: str = 'origin', 
+                            offline: bool = False):
     branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
-    CheckoutBranch(repo, branch, masterBranch=masterBranch, remote=remote)
+    CheckoutBranch(repo, branch, masterBranch=masterBranch, remote=remote, offline=offline)
 
 
 def GetHelmChartBranches(repo: git.Repo, resourceGroup: str, namespace: str,
-                         remote: str = 'origin'):
+                         remote: str = 'origin', 
+                         offline: bool = False):
     helmCharts: List[str] = []
     repoBranches = list(map(lambda repoBranch: str(repoBranch), repo.branches))
-    if remote in repo.remotes:
+    if not offline and remote in repo.remotes:
         remoteBranches = repo.remotes[remote].fetch()
         for remoteBranch in remoteBranches:
             localBranch = str(remoteBranch).replace(f'{remote}/', '', 1)
