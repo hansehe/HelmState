@@ -45,7 +45,7 @@ def HandleAction(action: str,
                  offline: bool = False):
     repoHelmCharts = helmChart if isinstance(helmChart, list) else [helmChart]
     outputData = {}
-    repo = GitTools.GetRepo(folder, initializeIfNotExists=True, push=push)
+    repo = GitTools.GetRepo(folder, initializeIfNotExists=True, push=push, offline=offline)
     if len(repoHelmCharts) == 0:
         repoHelmCharts = GitTools.GetHelmChartBranches(repo, resourceGroup, namespace, remote=remote, offline=offline)
     for repoHelmChart in repoHelmCharts:
@@ -60,9 +60,9 @@ def HandleAction(action: str,
             state = StateHandler.LoadState(folder)
             StateHandler.UpdateHelmVersion(state, resourceGroup, namespace, repoHelmChart, version)
             GitTools.CommitState(repo, state, folder, resourceGroup, namespace, repoHelmChart, message,
-                                 remote=remote, push=push)
+                                 remote=remote, push=push, offline=offline)
         elif action == 'revert':
-            GitTools.RevertState(repo, resourceGroup, namespace, repoHelmChart, commits, remote=remote, push=push)
+            GitTools.RevertState(repo, resourceGroup, namespace, repoHelmChart, commits, remote=remote, push=push, offline=offline)
         else:
             raise Exception('No matching action provided, please add -h/--help to get help.')
 

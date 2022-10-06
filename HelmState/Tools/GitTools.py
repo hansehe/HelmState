@@ -19,7 +19,10 @@ def CreateDefaultReadmeFile(repoFolder: str, filename = 'README.md', content: st
 
 
 def GetRepo(repoFolder: str, initializeIfNotExists=False,
-            masterBranch: str = 'master', remote: str = 'origin', push: bool = True):
+            masterBranch: str = 'master', 
+            remote: str = 'origin', 
+            push: bool = True, 
+            offline: bool = False):
     stateFile = StateHandler.GetStateFilePath(repoFolder)
     repoFolder = os.path.dirname(stateFile)
     if not os.path.isdir(os.path.join(repoFolder, '.git')):
@@ -32,8 +35,9 @@ def GetRepo(repoFolder: str, initializeIfNotExists=False,
 
     if GetCommitCount(repo) == 0:
         defaultFile = CreateDefaultReadmeFile(repoFolder)
-        CommitFiles(repo, masterBranch, 'initial commit', files=[defaultFile], remote=remote, push=push)
-
+        CommitFiles(repo, masterBranch, 'initial commit', files=[defaultFile], remote=remote, push=push, offline=offline)
+    if not offline and remote in repo.remotes:
+        repo.remotes[remote].update(prune=True)
     return repo
 
 
@@ -76,29 +80,40 @@ def CheckForUntrackedChanges(repo: git.Repo, files: list = None):
 
 
 def CommitFiles(repo: git.Repo, branch: str, message: str, files: list = None,
-                remote: str = 'origin', push: bool = True):
+                remote: str = 'origin', 
+                push: bool = True, 
+                offline: bool = False):
     if CheckForUntrackedChanges(repo, files):
         if files is None:
             repo.git.add(A=True)
         else:
             repo.git.add(files)
         repo.git.commit(m=message)
-    if remote in repo.remotes and push:
+    if remote in repo.remotes and push and not offline:
         repo.git.push('--set-upstream', remote, branch)
+
+
+def GetBranchState(repo: git.Repo, branch: str):
+    commitsDiff = repo.git.rev_list('--left-right', '--count', f'{branch}...{branch}@{{u}}')
+    numCommitsAhead, numCommitsBehind = commitsDiff.split('\t')
+    return int(numCommitsAhead), int(numCommitsBehind)
+
 
 
 def PullBranch(repo: git.Repo, branch: str, 
                remote: str = 'origin', 
                checkoutBranchFromOrigin = False):
     if remote in repo.remotes:
-        remoteBranches = repo.remotes[remote].fetch()
+        remoteBranches = repo.remotes[remote].refs
         remoteBranch = f'{remote}/{branch}'
         if remoteBranch in remoteBranches:
             repo.index.reset(head=True)
             if checkoutBranchFromOrigin:
                 repo.git.checkout(remoteBranch, b=branch)
             else:
-                repo.git.pull(remote, branch)
+                numCommitsAhead, numCommitsBehind = GetBranchState(repo, branch)
+                if numCommitsBehind > 0:
+                    repo.git.pull(remote, branch)
                 repo.index.reset(head=True)
             return True
     return False
@@ -142,7 +157,7 @@ def GetHelmChartBranches(repo: git.Repo, resourceGroup: str, namespace: str,
     helmCharts: List[str] = []
     repoBranches = list(map(lambda repoBranch: str(repoBranch), repo.branches))
     if not offline and remote in repo.remotes:
-        remoteBranches = repo.remotes[remote].fetch()
+        remoteBranches = repo.remotes[remote].refs
         for remoteBranch in remoteBranches:
             localBranch = str(remoteBranch).replace(f'{remote}/', '', 1)
             if localBranch not in repoBranches:
@@ -154,14 +169,19 @@ def GetHelmChartBranches(repo: git.Repo, resourceGroup: str, namespace: str,
 
 
 def CommitState(repo: git.Repo, state: dict, repoFolder: str, resourceGroup: str, namespace: str, helmChart: str, message: str,
-                remote: str = 'origin', push: bool = True):
+                remote: str = 'origin', 
+                push: bool = True, 
+                offline: bool = False):
     branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
     stateFile = StateHandler.DumpState(state, repoFolder)
-    CommitFiles(repo, branch, message, files=[stateFile], remote=remote, push=push)
+    CommitFiles(repo, branch, message, files=[stateFile], remote=remote, push=push, offline=offline)
 
 
 def RevertState(repo: git.Repo, resourceGroup: str, namespace: str, helmChart: str,
-                numberOfCommits = 1, remote: str = 'origin', push: bool = True):
+                numberOfCommits = 1, 
+                remote: str = 'origin', 
+                push: bool = True, 
+                offline: bool = False):
     branch = StateHandler.GetStateBranchname(resourceGroup, namespace, helmChart)
     commitCount = GetCommitCount(repo)
     if commitCount <= numberOfCommits:
@@ -169,5 +189,5 @@ def RevertState(repo: git.Repo, resourceGroup: str, namespace: str, helmChart: s
                         f'must be lower then counted commits ({commitCount}) in branch {branch}!')
 
     repo.head.reset(f'HEAD~{numberOfCommits}', index=True, working_tree=True)
-    if remote in repo.remotes and push:
+    if remote in repo.remotes and push and not offline:
         repo.git.push('--set-upstream', '--force', remote, branch)
