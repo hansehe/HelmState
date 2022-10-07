@@ -42,8 +42,8 @@ def HandleAction(action: str,
                  output: str = 'json',
                  dumps: str = None,
                  masterBranch: str = 'master',
-                 remote: str = 'remote',
-                 remote_url: str = None,
+                 remote: str = 'origin',
+                 remoteUrl: str = None,
                  offline: bool = False):
     repoHelmCharts = helmChart if isinstance(helmChart, list) else [helmChart]
     outputData = {}
@@ -51,7 +51,7 @@ def HandleAction(action: str,
                             initializeIfNotExists=True, 
                             masterBranch=masterBranch, 
                             remote=remote, 
-                            remote_url=remote_url,
+                            remoteUrl=remoteUrl,
                             push=push, 
                             offline=offline)
     if len(repoHelmCharts) == 0:

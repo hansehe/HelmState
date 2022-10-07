@@ -22,15 +22,15 @@ def GetRepo(repoFolder: str,
             initializeIfNotExists=False,
             masterBranch: str = 'master', 
             remote: str = 'origin', 
-            remote_url: str = None, 
+            remoteUrl: str = None, 
             push: bool = True, 
             offline: bool = False):
     stateFile = StateHandler.GetStateFilePath(repoFolder)
     repoFolder = os.path.dirname(stateFile)
     if not os.path.isdir(os.path.join(repoFolder, '.git')):
         if initializeIfNotExists:
-            if remote_url is not None and not offline:
-                repo = git.Repo.clone_from(remote_url, repoFolder)
+            if remoteUrl is not None and not offline:
+                repo = git.Repo.clone_from(remoteUrl, repoFolder)
             else:
                 repo = git.Repo.init(repoFolder)
         else:
@@ -38,11 +38,11 @@ def GetRepo(repoFolder: str,
     else:
         repo = git.Repo(repoFolder)
 
-    if remote_url is not None:
+    if remoteUrl is not None:
         if remote in repo.remotes:
-            repo.remotes[remote].set_url(remote_url)
+            repo.remotes[remote].set_url(remoteUrl)
         else:
-            repo.create_remote(remote, remote_url)
+            repo.create_remote(remote, remoteUrl)
 
     if GetCommitCount(repo) == 0:
         defaultFile = CreateDefaultReadmeFile(repoFolder)
@@ -111,18 +111,23 @@ def GetBranchState(repo: git.Repo, branch: str):
 
 
 
+def GetRemoteBranchNames(repo: git.Repo, 
+                         remote: str = 'origin'):
+    remoteBranches = repo.remotes[remote].refs
+    remoteBranchNames = list(map(lambda x: str(x), remoteBranches))
+    return remoteBranchNames
+
+
 def PullBranch(repo: git.Repo, branch: str, 
                remote: str = 'origin', 
                checkoutBranchFromOrigin = False):
     if remote in repo.remotes:
-        remoteBranches = repo.remotes[remote].refs
+        remoteBranches = GetRemoteBranchNames(repo, remote=remote)
         remoteBranch = f'{remote}/{branch}'
         if remoteBranch in remoteBranches:
             repo.index.reset(head=True)
             if checkoutBranchFromOrigin:
                 repo.git.checkout(remoteBranch, b=branch)
-                repo.git.pull(remote, branch)
-                repo.git.push('--set-upstream', remote, branch)
             else:
                 numCommitsAhead, numCommitsBehind = GetBranchState(repo, branch)
                 if numCommitsBehind > 0:
@@ -170,9 +175,9 @@ def GetHelmChartBranches(repo: git.Repo, resourceGroup: str, namespace: str,
     helmCharts: List[str] = []
     repoBranches = list(map(lambda repoBranch: str(repoBranch), repo.branches))
     if not offline and remote in repo.remotes:
-        remoteBranches = repo.remotes[remote].refs
+        remoteBranches = GetRemoteBranchNames(repo, remote=remote)
         for remoteBranch in remoteBranches:
-            localBranch = str(remoteBranch).replace(f'{remote}/', '', 1)
+            localBranch = remoteBranch.replace(f'{remote}/', '', 1)
             if localBranch not in repoBranches:
                 repoBranches.append(localBranch)
     for branch in repoBranches:
