@@ -18,20 +18,31 @@ def CreateDefaultReadmeFile(repoFolder: str, filename = 'README.md', content: st
     return defaultFile
 
 
-def GetRepo(repoFolder: str, initializeIfNotExists=False,
+def GetRepo(repoFolder: str, 
+            initializeIfNotExists=False,
             masterBranch: str = 'master', 
             remote: str = 'origin', 
+            remote_url: str = None, 
             push: bool = True, 
             offline: bool = False):
     stateFile = StateHandler.GetStateFilePath(repoFolder)
     repoFolder = os.path.dirname(stateFile)
     if not os.path.isdir(os.path.join(repoFolder, '.git')):
         if initializeIfNotExists:
-            repo = git.Repo.init(repoFolder)
+            if remote_url is not None and not offline:
+                repo = git.Repo.clone_from(remote_url, repoFolder)
+            else:
+                repo = git.Repo.init(repoFolder)
         else:
             raise Exception(f'State repoFolder {repoFolder} does not exist!')
     else:
         repo = git.Repo(repoFolder)
+
+    if remote_url is not None:
+        if remote in repo.remotes:
+            repo.remotes[remote].set_url(remote_url)
+        else:
+            repo.create_remote(remote, remote_url)
 
     if GetCommitCount(repo) == 0:
         defaultFile = CreateDefaultReadmeFile(repoFolder)
@@ -56,7 +67,7 @@ def NormalizeFile(repo: git.Repo, file: str):
     return normalizedFile
 
 
-def NormalizeFiles(repo: git.Repo, files: []):
+def NormalizeFiles(repo: git.Repo, files: list):
     normalizedFiles = []
     for file in files:
         normalizedFile = NormalizeFile(repo, file)

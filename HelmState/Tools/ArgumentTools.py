@@ -72,6 +72,10 @@ def __AddStateHolderArguments(parser: argparse.ArgumentParser):
                         help=f"Set git remote prefix. Default remote is '{defaultRemote}'.",
                         default=defaultRemote)
 
+    parser.add_argument("--remote-url", type=str,
+                        help=f"Set git remote url.",
+                        default=None)
+
     parser.add_argument("--offline",
                         help="Drop any remote updates.",
                         action='store_true')

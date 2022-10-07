@@ -24,6 +24,7 @@ def Main(args: list = None):
                              arguments.dumps,
                              arguments.master_branch,
                              arguments.remote,
+                             arguments.remote_url,
                              arguments.offline)
 
     return outputStr
@@ -42,10 +43,17 @@ def HandleAction(action: str,
                  dumps: str = None,
                  masterBranch: str = 'master',
                  remote: str = 'remote',
+                 remote_url: str = None,
                  offline: bool = False):
     repoHelmCharts = helmChart if isinstance(helmChart, list) else [helmChart]
     outputData = {}
-    repo = GitTools.GetRepo(folder, initializeIfNotExists=True, push=push, offline=offline)
+    repo = GitTools.GetRepo(folder, 
+                            initializeIfNotExists=True, 
+                            masterBranch=masterBranch, 
+                            remote=remote, 
+                            remote_url=remote_url,
+                            push=push, 
+                            offline=offline)
     if len(repoHelmCharts) == 0:
         repoHelmCharts = GitTools.GetHelmChartBranches(repo, resourceGroup, namespace, remote=remote, offline=offline)
     for repoHelmChart in repoHelmCharts:
