@@ -121,6 +121,7 @@ def PullBranch(repo: git.Repo, branch: str,
             repo.index.reset(head=True)
             if checkoutBranchFromOrigin:
                 repo.git.checkout(remoteBranch, b=branch)
+                repo.git.push('--set-upstream', remote, branch)
             else:
                 numCommitsAhead, numCommitsBehind = GetBranchState(repo, branch)
                 if numCommitsBehind > 0:
